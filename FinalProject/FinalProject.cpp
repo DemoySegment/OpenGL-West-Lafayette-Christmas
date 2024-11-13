@@ -105,9 +105,9 @@ void display(GLFWwindow* window)
    glm::mat4 M = glm::rotate(scene::angle, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::vec3(scene::scale * scene::mesh1.mScaleFactor));
    glm::mat4 V = glm::lookAt(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
    glm::mat4 P = glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip);
-
+   
    //tree MVP
-   glm::mat4 M2 = glm::rotate(scene::angle * 1/2, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::vec3(scene::scale * scene::mesh2.mScaleFactor * 0.4));
+   glm::mat4 M2 = glm::rotate(scene::angle, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::vec3(scene::scale * scene::mesh2.mScaleFactor * 0.4));
 
    glUseProgram(scene::shader);
 
@@ -311,7 +311,6 @@ int main(void)
    ImGui::CreateContext();
    ImGui_ImplGlfw_InitForOpenGL(window, true);
    ImGui_ImplOpenGL3_Init("#version 150");
-
    // Loop until the user closes the window 
    while (!glfwWindowShouldClose(window))
    {
