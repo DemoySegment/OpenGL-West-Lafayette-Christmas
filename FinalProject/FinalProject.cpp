@@ -125,6 +125,11 @@ namespace scene
    const std::string fragment_shader("lab2_fs.glsl");
 
    GLuint shader = -1;
+
+
+   glm::vec3 light_dir = glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f)); // 光照方向
+   glm::vec3 light_color = glm::vec3(1.0f, 1.0f, 1.0f);                 // 光的颜色
+   glm::vec3 ambient_color = glm::vec3(0.2f, 0.2f, 0.2f);              // 环境光颜色
 }
 //For an explanation of this program's structure see https://www.glfw.org/docs/3.3/quick.html 
 
@@ -218,6 +223,22 @@ void draw_gui(GLFWwindow* window)
    }
    ImGui::End();
 
+   ImGui::Begin("Lighting Control");
+
+   // 控制光源方向
+   ImGui::Text("Light Direction");
+   ImGui::SliderFloat3("Direction", glm::value_ptr(scene::light_dir), -1.0f, 1.0f);
+
+   // 控制光的颜色
+   ImGui::Text("Light Color");
+   ImGui::ColorEdit3("Light Color", glm::value_ptr(scene::light_color)); // 使用颜色选择器
+
+   // 控制环境光颜色
+   ImGui::Text("Ambient Color");
+   ImGui::ColorEdit3("Ambient Color", glm::value_ptr(scene::ambient_color)); // 使用颜色选择器
+
+   ImGui::End();
+
    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
    ImGui::End();
 
@@ -250,6 +271,15 @@ void display(GLFWwindow* window)
        glm::rotate(scene::house_rotation, glm::vec3(0.0f, 1.0f, 0.0f)) *
        glm::scale(glm::vec3(scene::house_scale * scene::mesh1.mScaleFactor * 1.6));
    glm::mat4 V = glm::lookAt(scene::camera_position, scene::camera_target, scene::camera_up);
+
+   glm::mat4 ModelView = V * M; // 视图模型矩阵
+   glm::mat3 NormalMatrix = glm::transpose(glm::inverse(glm::mat3(ModelView))); // 法线矩阵
+
+   int model_view_loc = glGetUniformLocation(scene::shader, "ModelView");
+   int normal_matrix_loc = glGetUniformLocation(scene::shader, "NormalMatrix");
+
+   glUniformMatrix4fv(model_view_loc, 1, GL_FALSE, glm::value_ptr(ModelView));
+   glUniformMatrix3fv(normal_matrix_loc, 1, GL_FALSE, glm::value_ptr(NormalMatrix));
    
    //tree MV
    glm::mat4 M2 = glm::translate(scene::tree_position) *
@@ -341,6 +371,19 @@ void display(GLFWwindow* window)
    scene::mesh4.DrawMesh();
 
    draw_gui(window);
+
+   // 归一化光照方向
+   glm::vec3 normalized_light_dir = glm::normalize(scene::light_dir);
+
+   // 获取着色器中变量的位置
+   int light_dir_loc = glGetUniformLocation(scene::shader, "light_dir");
+   int light_color_loc = glGetUniformLocation(scene::shader, "light_color");
+   int ambient_color_loc = glGetUniformLocation(scene::shader, "ambient_color");
+
+   // 设置光照参数
+   glUniform3fv(light_dir_loc, 1, glm::value_ptr(normalized_light_dir));
+   glUniform3fv(light_color_loc, 1, glm::value_ptr(scene::light_color));
+   glUniform3fv(ambient_color_loc, 1, glm::value_ptr(scene::ambient_color));
 
    // Swap front and back buffers
    glfwSwapBuffers(window);
