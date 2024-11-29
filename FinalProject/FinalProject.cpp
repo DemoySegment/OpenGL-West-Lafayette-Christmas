@@ -130,6 +130,10 @@ namespace scene
    glm::vec3 light_dir = glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f)); // 光照方向
    glm::vec3 light_color = glm::vec3(1.0f, 1.0f, 1.0f);                 // 光的颜色
    glm::vec3 ambient_color = glm::vec3(0.2f, 0.2f, 0.2f);              // 环境光颜色
+   float specular_strength = 1.0f; // 默认镜面反射强度（增强为 1.0）
+   glm::vec3 specular_pos = glm::vec3(0.0f, 0.0f, 0.0f); // 镜面反射生成的位置
+   //float attenuation_factor = 0.05f; // 控制光影响范围的衰减因子
+   //float glossiness = 64.0f; // 控制镜面反射的光泽度
 }
 //For an explanation of this program's structure see https://www.glfw.org/docs/3.3/quick.html 
 
@@ -223,19 +227,26 @@ void draw_gui(GLFWwindow* window)
    }
    ImGui::End();
 
-   ImGui::Begin("Lighting Control");
+   ImGui::Begin("Lighting and Reflection Control");
 
-   // 控制光源方向
+   // 光源方向控制
    ImGui::Text("Light Direction");
    ImGui::SliderFloat3("Direction", glm::value_ptr(scene::light_dir), -1.0f, 1.0f);
 
-   // 控制光的颜色
+   // 光颜色控制
    ImGui::Text("Light Color");
-   ImGui::ColorEdit3("Light Color", glm::value_ptr(scene::light_color)); // 使用颜色选择器
+   ImGui::ColorEdit3("Light Color", glm::value_ptr(scene::light_color));
 
-   // 控制环境光颜色
+   // 环境光控制
    ImGui::Text("Ambient Color");
-   ImGui::ColorEdit3("Ambient Color", glm::value_ptr(scene::ambient_color)); // 使用颜色选择器
+   ImGui::ColorEdit3("Ambient Color", glm::value_ptr(scene::ambient_color));
+
+   // 镜面反射强度控制
+   ImGui::Text("Specular Reflection");
+   ImGui::SliderFloat("Specular Strength", &scene::specular_strength, 0.0f, 2.0f); // 增强强度范围
+
+   // 镜面反射位置控制
+   ImGui::SliderFloat3("Specular Position", glm::value_ptr(scene::specular_pos), -10.0f, 10.0f); // 扩大位置范围
 
    ImGui::End();
 
@@ -379,11 +390,17 @@ void display(GLFWwindow* window)
    int light_dir_loc = glGetUniformLocation(scene::shader, "light_dir");
    int light_color_loc = glGetUniformLocation(scene::shader, "light_color");
    int ambient_color_loc = glGetUniformLocation(scene::shader, "ambient_color");
+   int specular_strength_loc = glGetUniformLocation(scene::shader, "specular_strength");
+   int specular_pos_loc = glGetUniformLocation(scene::shader, "specular_pos");
+   int attenuation_factor_loc = glGetUniformLocation(scene::shader, "attenuation_factor");
+   int glossiness_loc = glGetUniformLocation(scene::shader, "glossiness");
 
-   // 设置光照参数
+   // 设置光照和镜面反射参数
    glUniform3fv(light_dir_loc, 1, glm::value_ptr(normalized_light_dir));
    glUniform3fv(light_color_loc, 1, glm::value_ptr(scene::light_color));
    glUniform3fv(ambient_color_loc, 1, glm::value_ptr(scene::ambient_color));
+   glUniform1f(specular_strength_loc, scene::specular_strength);
+   glUniform3fv(specular_pos_loc, 1, glm::value_ptr(scene::specular_pos));
 
    // Swap front and back buffers
    glfwSwapBuffers(window);
